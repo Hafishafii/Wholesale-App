@@ -29,25 +29,13 @@ export const useAddProduct = () => {
             wholesale_price: v.wholesale_price,
             min_order_quantity: v.min_order_quantity,
             allow_customization: v.allow_customization,
-            sizes: v.sizes,   
+            sizes: v.sizes,
             images: [],
           })) || [],
       };
 
       const createRes = await api.post('/products/', productPayload);
       const backendVariants = createRes.data.variants;
-
-      if (formData.images?.length) {
-        const productImgFormData = new FormData();
-        formData.images.forEach((img) => {
-          productImgFormData.append('images', img);
-          productImgFormData.append('view_types', 'front');
-        });
-
-        await api.post(`/product-images`, productImgFormData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      }
 
       if (formData.variants?.length) {
         for (let i = 0; i < formData.variants.length; i++) {
@@ -56,16 +44,18 @@ export const useAddProduct = () => {
           if (!backendVariant || !variant.images?.length) continue;
 
           const variantFormData = new FormData();
-          variantFormData.append('variant_id', backendVariant.id.toString());
-
           variant.images.forEach((img) => {
             variantFormData.append('images', img);
-            variantFormData.append('view_types', 'front');
+            variantFormData.append('view_types', 'front'); 
           });
 
-          await api.post('/product-images', variantFormData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
+          await api.post(
+            `/variants/${backendVariant.id}/bulk_upload_images/`,
+            variantFormData,
+            {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            }
+          );
         }
       }
 
