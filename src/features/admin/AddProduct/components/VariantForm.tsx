@@ -88,7 +88,7 @@ export default function VariantForm({
       </p>
 
       {localVariants.map((variant, index) => (
-        <div key={index} className="border p-4 rounded-md space-y-2">
+        <div key={index} className="bg-gray-100 border p-4 rounded-md space-y-2">
           <div className="grid grid-cols-2 gap-4">
             {/* Color Picker */}
             <div>

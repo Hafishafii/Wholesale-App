@@ -10,7 +10,11 @@ interface ProductInfoFormProps {
     fabric: string;
     description: string;
   };
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  onInputChange: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
 }
 
 export const ProductInfoForm: FC<ProductInfoFormProps> = ({
@@ -55,24 +59,18 @@ export const ProductInfoForm: FC<ProductInfoFormProps> = ({
           />
         </div>
 
-        {/* Product Type */}
+        {/* Product Type (changed to input field) */}
         <div>
           <label className="block mb-2">Product Type</label>
-          <div className="flex space-x-4">
-            {['Sarees', 'Shirts', 'Dhothis'].map((type) => (
-              <label key={type} className="flex items-center">
-                <input
-                  type="radio"
-                  name="product_type"
-                  value={type}
-                  checked={formData.product_type === type}
-                  onChange={onInputChange}
-                  className="mr-2"
-                />
-                {type}
-              </label>
-            ))}
-          </div>
+          <input
+            type="text"
+            name="product_type"
+            value={formData.product_type}
+            onChange={onInputChange}
+            placeholder="e.g. Saree, Shirt, Dhothi..."
+            className="w-full p-2 border rounded"
+            required
+          />
         </div>
 
         {/* Fabric */}
