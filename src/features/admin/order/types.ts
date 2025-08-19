@@ -3,6 +3,7 @@ export type OrderStatus =
   | "In Review"
   | "Approved"
   | "Rejected"
+  | "In production"
   | "Shipped"
   | "Delivered"
   | string;
@@ -29,8 +30,8 @@ export interface OrderItem {
   variant: {
     id: number;
     color?: string;
-    size?: string;
-    fabricType?: string; // added for backend match
+    sizes?: { size: string }[];
+    fabricType?: string;
     productCode?: string;
     sku?: string;
     images?: { id: number; image: string; viewType?: string }[];
@@ -38,8 +39,8 @@ export interface OrderItem {
 }
 
 export interface CustomizationOptions {
-  fabric?: string;        // normalized key
-  fabricType?: string;    // backend key if needed
+  fabric?: string; 
+  fabricType?: string; 
   color?: string;
   colorReferenceImg?: string;
 }

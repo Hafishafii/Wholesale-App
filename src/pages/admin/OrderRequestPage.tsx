@@ -4,6 +4,40 @@ import { OrderRequestTable } from "../../features/admin/order/components/OrderRe
 import type { OrderRequest } from "../../features/admin/order/types";
 import api from "../../lib/api";
 
+
+const normalizeStatus = (status: string): string => {
+  switch (status.toLowerCase()) {
+    case "pending":
+      return "Pending";
+    case "accepted":
+      return "Approved";
+    case "in_review":
+      return "In Review";
+    case "in_production":
+      return "In Production";
+    case "shipped":
+      return "Shipped";
+    case "delivered":
+      return "Delivered";
+    case "cancelled":
+    case "rejected":
+      return "Rejected";
+    default:
+      return status;
+  }
+};
+
+
+const backendStatusMap: Record<string, string> = {
+  Pending: "pending",
+  Approved: "accepted",
+  "In Review": "in_review",
+  "In Production": "in_production",
+  Shipped: "shipped",
+  Delivered: "delivered",
+  Rejected: "rejected",
+};
+
 const OrderRequestPage = () => {
   const [orders, setOrders] = useState<OrderRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,8 +54,7 @@ const OrderRequestPage = () => {
     setLoading(true);
     try {
       const params: Record<string, any> = {};
-      
-      // Only apply filters if they exist
+
       if (filters.status && filters.status.length > 0) {
         params.status = filters.status.join(",");
       }
@@ -31,6 +64,7 @@ const OrderRequestPage = () => {
 
       const response = await api.get(url, { params });
       const data = response.data;
+
       let ordersData: any[] = [];
       if (Array.isArray(data)) {
         ordersData = data;
@@ -59,7 +93,7 @@ const OrderRequestPage = () => {
         return {
           id: order.id?.toString() || order._id?.toString() || "unknown-id",
           date: order.ordered_at ? new Date(order.ordered_at).toLocaleDateString() : "",
-          status: order.status || "Pending",
+          status: normalizeStatus(order.status || "pending"),
           customerName,
           contact: contactInfo,
           product: firstItem.product_name || "N/A",
@@ -75,7 +109,10 @@ const OrderRequestPage = () => {
           (order, index, self) => index === self.findIndex((o) => o.id === order.id)
         );
 
-      if (url === "/orders/admin/orders/" || JSON.stringify(filters) !== JSON.stringify(currentFilters)) {
+      if (
+        url === "/orders/admin/orders/" ||
+        JSON.stringify(filters) !== JSON.stringify(currentFilters)
+      ) {
         setOrders(deduplicate(normalized));
         setCurrentFilters(filters);
       } else {
@@ -100,15 +137,16 @@ const OrderRequestPage = () => {
     startDate: string;
     endDate: string;
   }) => {
-    const statusArray = status !== "All" ? [status.toLowerCase()] : [];
-    let dateRange: string | undefined;
+    const backendStatus =
+      status !== "All" ? [backendStatusMap[status] || status.toLowerCase()] : [];
 
+    let dateRange: string | undefined;
     if (startDate && endDate) {
       dateRange = `${startDate},${endDate}`;
     }
 
     fetchOrders("/orders/admin/orders/", {
-      status: statusArray,
+      status: backendStatus,
       dateRange,
     });
   };

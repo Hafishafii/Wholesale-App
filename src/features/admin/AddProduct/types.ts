@@ -13,12 +13,12 @@ export interface ProductVariant {
   color: string;
   product_code: string;
   stock_keeping_unit: string;
-  cost_price: number;
-  wholesale_price: number;
-  min_order_quantity: number;
+  cost_price?: number;        
+  wholesale_price?: number;    
+  min_order_quantity?: number; 
   allow_customization: boolean;
   images: File[];
-  sizes: VariantSize[];   
+  sizes: VariantSize[];
 }
 
 export interface ProductFormData {

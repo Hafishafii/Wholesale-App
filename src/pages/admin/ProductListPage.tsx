@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useAdminProducts, ProductGrid } from "../../features/admin/Product";
 import AdminLayout from "../../components/layouts/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import axios from "axios";
 
-// Define allowed filter params
 export interface ProductFilterParams {
   category?: number;
   size?: string;
@@ -54,25 +53,8 @@ const ProductListPage = () => {
 
   const navigate = useNavigate();
 
-  const { products, loading, total, loadMore, hasMore, reset } =
+  const { products, loading, total, page, totalPages, setPage, reset } =
     useAdminProducts({ filters, search });
-
-  // Infinite scroll
-  const handleScroll = useCallback(() => {
-    if (loading || !hasMore) return;
-
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const threshold = document.body.offsetHeight - 200;
-
-    if (scrollPosition >= threshold) {
-      loadMore();
-    }
-  }, [loading, hasMore, loadMore]);
-
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
 
   // Fetch categories dynamically
   useEffect(() => {
@@ -108,6 +90,43 @@ const ProductListPage = () => {
     reset();
   };
 
+  // Pagination Controls
+  const Pagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+    return (
+      <div className="flex justify-center items-center gap-2 mt-6">
+        <Button
+          variant="outline"
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Prev
+        </Button>
+
+        {pages.map((p) => (
+          <Button
+            key={p}
+            variant={p === page ? "default" : "outline"}
+            onClick={() => setPage(p)}
+          >
+            {p}
+          </Button>
+        ))}
+
+        <Button
+          variant="outline"
+          disabled={page === totalPages}
+          onClick={() => setPage(page + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="p-6 bg-white min-h-screen">
@@ -134,9 +153,7 @@ const ProductListPage = () => {
             {/* Category Filter */}
             <select
               value={filters.category ?? ""}
-              onChange={(e) =>
-                handleFilterChange("category", e.target.value)
-              }
+              onChange={(e) => handleFilterChange("category", e.target.value)}
               className="border rounded-md px-3 py-2"
             >
               <option value="">All Categories</option>
@@ -172,9 +189,7 @@ const ProductListPage = () => {
             {/* Availability Filter */}
             <select
               value={filters.availability ?? ""}
-              onChange={(e) =>
-                handleFilterChange("availability", e.target.value)
-              }
+              onChange={(e) => handleFilterChange("availability", e.target.value)}
               className="border rounded-md px-3 py-2"
             >
               <option value="">All Availability</option>
@@ -186,10 +201,7 @@ const ProductListPage = () => {
             <select
               value={filters.allow_customization?.toString() ?? ""}
               onChange={(e) =>
-                handleFilterChange(
-                  "allow_customization",
-                  e.target.value === "true"
-                )
+                handleFilterChange("allow_customization", e.target.value === "true")
               }
               className="border rounded-md px-3 py-2"
             >
@@ -237,26 +249,8 @@ const ProductListPage = () => {
               <>
                 <ProductGrid products={products} />
 
-                {loading && products.length > 0 && (
-                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    {[...Array(3)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="border rounded p-4 space-y-4 animate-pulse"
-                      >
-                        <SkeletonBox className="w-full h-40 rounded" />
-                        <SkeletonBox className="w-3/4 h-6 rounded" />
-                        <SkeletonBox className="w-1/2 h-6 rounded" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {!hasMore && (
-                  <p className="text-center text-gray-500 mt-6">
-                    No more products
-                  </p>
-                )}
+                {/* Pagination */}
+                <Pagination />
               </>
             )}
           </>

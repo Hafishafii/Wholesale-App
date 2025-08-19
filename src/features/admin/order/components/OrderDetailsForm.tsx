@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../../lib/api";
 import { Button } from "../../../../components/ui/button";
 
-// Backend's status choices - ensure these match exactly what the backend expects
+// Backend's status choices - must match backend values
 const backendStatusOptions: { value: OrderStatus; label: string }[] = [
   { value: "pending", label: "Pending" },
   { value: "accepted", label: "Accepted" },
@@ -46,7 +46,7 @@ const OrderDetailsForm = ({ order }: Props) => {
       if (response.status === 200) {
         setSuccess(true);
         setTimeout(() => {
-          navigate("/admin/orders");
+          navigate(`/admin/orders/${order._id}`); 
         }, 1000);
       } else {
         setError("Failed to update status. Please try again.");
@@ -55,8 +55,8 @@ const OrderDetailsForm = ({ order }: Props) => {
       console.error("Failed to update status:", error);
       setError(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to update status. Please try again."
+          error.message ||
+          "Failed to update status. Please try again."
       );
     } finally {
       setLoading(false);
@@ -76,7 +76,7 @@ const OrderDetailsForm = ({ order }: Props) => {
     <div className="space-y-6 p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6 text-center">Order Details</h1>
 
-      {/* Status Update Section - Moved to top for better visibility */}
+      {/* Status Update Section */}
       <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1">
@@ -104,10 +104,8 @@ const OrderDetailsForm = ({ order }: Props) => {
             {loading ? "Updating..." : "Update Status"}
           </Button>
         </div>
-        
-        {error && (
-          <div className="mt-3 text-red-600 text-sm">{error}</div>
-        )}
+
+        {error && <div className="mt-3 text-red-600 text-sm">{error}</div>}
         {success && (
           <div className="mt-3 text-green-600 text-sm">
             Status updated successfully!
@@ -115,7 +113,6 @@ const OrderDetailsForm = ({ order }: Props) => {
         )}
       </div>
 
-      {/* Rest of your form components remain the same */}
       {/* Customer Info */}
       <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6">
         <h2 className="text-lg font-semibold mb-5 pb-3 border-b border-gray-200">
@@ -140,9 +137,7 @@ const OrderDetailsForm = ({ order }: Props) => {
           />
           <Input
             value={
-              order.orderedAt
-                ? new Date(order.orderedAt).toLocaleString()
-                : ""
+              order.orderedAt ? new Date(order.orderedAt).toLocaleString() : ""
             }
             disabled
           />
@@ -166,7 +161,12 @@ const OrderDetailsForm = ({ order }: Props) => {
                     : "bg-gray-100 text-gray-600 border-gray-300"
                 }`}
               >
-                <input type="radio" checked={isSelected} disabled className="hidden" />
+                <input
+                  type="radio"
+                  checked={isSelected}
+                  disabled
+                  className="hidden"
+                />
                 {type}
               </label>
             );
@@ -191,7 +191,8 @@ const OrderDetailsForm = ({ order }: Props) => {
                   <div
                     className="w-10 h-10 rounded-full border-2 border-gray-300"
                     style={{
-                      backgroundColor: order.customization.color || "transparent",
+                      backgroundColor:
+                        order.customization.color || "transparent",
                     }}
                   />
                 )}
@@ -240,7 +241,9 @@ const OrderDetailsForm = ({ order }: Props) => {
       {/* Quantity */}
       {hasQuantity && (
         <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6">
-          {order.quantity && <Input type="number" value={order.quantity} disabled />}
+          {order.quantity && (
+            <Input type="number" value={order.quantity} disabled />
+          )}
           {order.bulkOrder && (
             <label className="flex items-center gap-3">
               <input type="checkbox" checked={order.bulkOrder || false} disabled />
@@ -282,7 +285,7 @@ const OrderDetailsForm = ({ order }: Props) => {
                 <th className="p-2 text-left">Image</th>
                 <th className="p-2 text-left">Product</th>
                 <th className="p-2 text-left">Color</th>
-                <th className="p-2 text-left">Size</th>
+                <th className="p-2 text-left">Sizes</th>
                 <th className="p-2 text-left">Quantity</th>
                 <th className="p-2 text-left">Price</th>
               </tr>
@@ -301,7 +304,12 @@ const OrderDetailsForm = ({ order }: Props) => {
                   </td>
                   <td className="p-2">{item.productName}</td>
                   <td className="p-2">{item.variant?.color || "-"}</td>
-                  <td className="p-2">{item.variant?.size || "-"}</td>
+                  <td className="p-2">
+                    {/* ✅ Display multiple sizes */}
+                    {item.variant?.sizes && item.variant.sizes.length > 0
+                      ? item.variant.sizes.map((s) => s.size).join(", ")
+                      : "-"}
+                  </td>
                   <td className="p-2">{item.quantity}</td>
                   <td className="p-2">₹{item.priceAtPurchase}</td>
                 </tr>

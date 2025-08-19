@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type{ OrderDetails } from "../types"
+import type { OrderDetails } from "../types";
 import api from "../../../../lib/api"; // adjust path
 
 export const useOrderDetails = (orderId: string) => {
@@ -25,28 +25,37 @@ export const useOrderDetails = (orderId: string) => {
           pincode: order.address_data?.pincode || "",
           landmark: order.address_data?.landmark || "",
           locality: order.address_data?.locality || "",
-          items: order.items?.map((item: any) => ({
-            id: item.id,
-            productName: item.product_name,
-            quantity: item.quantity,
-            priceAtPurchase: item.price_at_purchase,
-            variant: {
-              id: item.variant_detail?.id,
-              color: item.variant_detail?.color,
-              size: item.variant_detail?.size,
-              productCode: item.variant_detail?.product_code,
-              sku: item.variant_detail?.stock_keeping_unit,
-              images: (item.variant_detail?.variant_images || []).map((img: any) => ({
-                id: img.id,
-                image: img.image,
-                viewType: img.view_type
-              }))
-            }
-          })) || [],
+          items:
+            order.items?.map((item: any) => ({
+              id: item.id,
+              productName: item.product_name,
+              quantity: item.quantity,
+              priceAtPurchase: item.price_at_purchase,
+              variant: {
+                id: item.variant_detail?.id,
+                color: item.variant_detail?.color,
+                sizes:
+                  item.variant_detail?.sizes?.map((s: any) => ({
+                    size: s.size,
+                  })) ||
+                  (item.variant_detail?.size
+                    ? [{ size: item.variant_detail.size }]
+                    : []),
+                productCode: item.variant_detail?.product_code,
+                sku: item.variant_detail?.stock_keeping_unit,
+                images: (item.variant_detail?.variant_images || []).map(
+                  (img: any) => ({
+                    id: img.id,
+                    image: img.image,
+                    viewType: img.view_type,
+                  })
+                ),
+              },
+            })) || [],
           totalPrice: order.total_price,
           isPaid: order.is_paid,
           status: order.status,
-          orderedAt: order.ordered_at
+          orderedAt: order.ordered_at,
         };
 
         setData(normalizedOrder);

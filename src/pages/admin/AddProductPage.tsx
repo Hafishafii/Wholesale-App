@@ -81,9 +81,17 @@ const AddProductPage = () => {
         }
         skus.add(v.stock_keeping_unit);
 
-        if (v.cost_price <= 0) return `Variant ${i + 1}: Cost price must be positive.`;
-        if (v.wholesale_price <= 0) return `Variant ${i + 1}: Wholesale price must be positive.`;
-        if (v.min_order_quantity < 0) return `Variant ${i + 1}: Min order qty cannot be negative.`;
+        if (v.cost_price == null || v.cost_price <= 0) {
+          return `Variant ${i + 1}: Cost price must be positive.`;
+        }
+
+        if (v.wholesale_price == null || v.wholesale_price <= 0) {
+          return `Variant ${i + 1}: Wholesale price must be positive.`;
+        }
+
+        if (v.min_order_quantity == null || v.min_order_quantity < 0) {
+          return `Variant ${i + 1}: Min order qty cannot be negative.`;
+        }
 
         if (!v.sizes || v.sizes.length === 0) {
           return `Variant ${i + 1}: Please add at least one size.`;

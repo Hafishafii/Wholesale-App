@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { OrderRequest } from "../types";
 import { StatusBadge } from "./StatusBadge";
@@ -7,77 +7,27 @@ import { Skeleton } from "../../../../components/ui/skeleton";
 const allStatuses = [
   "All",
   "Pending",
-  "In Review",
-  "Approved",
-  "Rejected",
-  "In production",
+  "Accepted",
   "Shipped",
   "Delivered",
+  "Cancelled",
 ];
 
 interface Props {
   orders: OrderRequest[];
   loading: boolean;
-  onFilterChange: (filters: { status: string; startDate: string; endDate: string }) => void;
+  onFilterChange: (filters: {
+    status: string;
+    startDate: string;
+    endDate: string;
+  }) => void;
 }
 
 export const OrderRequestTable = ({ orders, loading, onFilterChange }: Props) => {
-  const [filteredOrders, setFilteredOrders] = useState<OrderRequest[]>([]);
   const [statusFilter, setStatusFilter] = useState("All");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const navigate = useNavigate();
-
-  // Apply filtering locally
-  useEffect(() => {
-    const statusMap: Record<string, string[]> = {
-      All: [],
-      Pending: ["pending"],
-      "In Review": ["in review", "in_review"],
-      Approved: ["approved", "accepted"],
-      Rejected: ["rejected", "declined", "cancelled"],
-      "In production": ["in production", "in_production", "processing"],
-      Shipped: ["shipped"],
-      Delivered: ["delivered"],
-    };
-
-    let filtered = [...orders];
-
-    if (statusFilter !== "All") {
-      const matchValues = statusMap[statusFilter] || [];
-      filtered = filtered.filter((o) =>
-        matchValues.includes(o.status?.toLowerCase()?.replace(/\s+/g, '_') || "")
-      );
-    }
-
-    if (startDate) {
-      const start = new Date(startDate);
-      filtered = filtered.filter((o) => {
-        if (!o.date) return false;
-        try {
-          const orderDate = new Date(o.date);
-          return orderDate >= start;
-        } catch {
-          return false;
-        }
-      });
-    }
-
-    if (endDate) {
-      const end = new Date(endDate);
-      filtered = filtered.filter((o) => {
-        if (!o.date) return false;
-        try {
-          const orderDate = new Date(o.date);
-          return orderDate <= end;
-        } catch {
-          return false;
-        }
-      });
-    }
-
-    setFilteredOrders(filtered);
-  }, [statusFilter, startDate, endDate, orders]);
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
@@ -160,14 +110,14 @@ export const OrderRequestTable = ({ orders, loading, onFilterChange }: Props) =>
                     ))}
                   </tr>
                 ))
-              : filteredOrders.length === 0 ? (
+              : orders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-4 text-center text-gray-500">
                     No orders found.
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((order, idx) => (
+                orders.map((order, idx) => (
                   <tr
                     key={`${order.id}-${idx}`}
                     className="border-b hover:bg-gray-50 text-sm"

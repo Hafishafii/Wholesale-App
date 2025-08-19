@@ -1,4 +1,3 @@
-
 import type { OrderStatus } from "../types";
 
 const statusStyles: Record<OrderStatus, string> = {
@@ -12,5 +11,9 @@ const statusStyles: Record<OrderStatus, string> = {
 };
 
 export const StatusBadge = ({ status }: { status: OrderStatus }) => {
-  return <span className={`font-semibold ${statusStyles[status]}`}>{status}</span>;
+  return (
+    <span className={`font-semibold ${statusStyles[status] || "text-gray-500"}`}>
+      {status}
+    </span>
+  );
 };
