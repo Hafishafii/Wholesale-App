@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ProductVariant } from "../types";
+import type { ProductVariant, VariantImage } from "../types";
 
 interface VariantFormProps {
   variants: ProductVariant[];
@@ -16,6 +16,7 @@ const COLOR_OPTIONS = [
 ];
 
 const SIZE_OPTIONS = ["small", "medium", "large", "xxl", "xxxl"];
+const VIEW_TYPE_OPTIONS = ["front", "back", "side", "top", "bottom"];
 
 const generateRandomCode = () =>
   Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -63,9 +64,23 @@ export default function VariantForm({
 
   const handleImageChange = (index: number, files: FileList | null) => {
     if (!files) return;
-    const newFiles = Array.from(files);
+    const newFiles: VariantImage[] = Array.from(files).map((file) => ({
+      image: file,
+      view_type: "front",
+    }));
     const updated = [...localVariants];
     updated[index].images = [...(updated[index].images || []), ...newFiles];
+    setLocalVariants(updated);
+    onVariantsChange(updated);
+  };
+
+  const updateImageViewType = (
+    variantIndex: number,
+    imgIndex: number,
+    viewType: string
+  ) => {
+    const updated = [...localVariants];
+    updated[variantIndex].images[imgIndex].view_type = viewType;
     setLocalVariants(updated);
     onVariantsChange(updated);
   };
@@ -125,7 +140,7 @@ export default function VariantForm({
               </div>
             </div>
 
-            {/* Sizes */}
+            {/* Sizes & Stock */}
             <div className="col-span-2">
               <label className="block mb-2">Sizes & Stock</label>
               {variant.sizes.map((s, sIndex) => (
@@ -187,6 +202,7 @@ export default function VariantForm({
               </button>
             </div>
 
+            {/* Other fields */}
             {/* Product Code */}
             <label>
               Product Code
@@ -300,15 +316,31 @@ export default function VariantForm({
                   <span className="text-2xl text-gray-400">+</span>
                 </label>
                 {variant.images &&
-                  variant.images.map((file, imgIndex) => {
-                    const previewUrl = URL.createObjectURL(file);
+                  variant.images.map((img, imgIndex) => {
+                    const previewUrl =
+                      img.image instanceof File
+                        ? URL.createObjectURL(img.image)
+                        : (img.image as string);
                     return (
-                      <div key={imgIndex} className="relative w-24 h-24">
+                      <div key={imgIndex} className="relative w-24 h-32 flex flex-col">
                         <img
                           src={previewUrl}
                           alt={`Variant ${index} image ${imgIndex + 1}`}
-                          className="w-full h-full object-cover rounded border"
+                          className="w-24 h-24 object-cover rounded border"
                         />
+                        <select
+                          value={img.view_type}
+                          onChange={(e) =>
+                            updateImageViewType(index, imgIndex, e.target.value)
+                          }
+                          className="mt-1 border p-1 rounded text-xs"
+                        >
+                          {VIEW_TYPE_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
                         <button
                           type="button"
                           onClick={() => removeVariantImage(index, imgIndex)}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCategories, useAddProduct } from '../../features/admin/AddProduct';
-import { ProductInfoForm, ImageUploadForm } from '../../features/admin/AddProduct';
+import { ProductInfoForm } from '../../features/admin/AddProduct';
 import type { ProductFormData, ProductVariant } from '../../features/admin/AddProduct/types';
 import VariantForm from "../../features/admin/AddProduct/components/VariantForm";
 
@@ -31,7 +31,6 @@ const AddProductPage = () => {
     is_draft: false,
   });
 
-  const [images, setImages] = useState<File[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
 
   useEffect(() => {
@@ -53,58 +52,57 @@ const AddProductPage = () => {
     }));
   };
 
-    const validateForm = (): string | null => {
-      if (!formData.category_id) return "Please select a category.";
-      if (!formData.name.trim()) return "Product name is required.";
-      if (!formData.product_type) return "Please select a product type.";
-      if (!formData.fabric.trim()) return "Fabric is required.";
-      if (!formData.description.trim()) return "Description is required.";
-      if (variants.length === 0) return "Please add at least one variant.";
+  const validateForm = (): string | null => {
+    if (!formData.category_id) return "Please select a category.";
+    if (!formData.name.trim()) return "Product name is required.";
+    if (!formData.product_type) return "Please select a product type.";
+    if (!formData.fabric.trim()) return "Fabric is required.";
+    if (!formData.description.trim()) return "Description is required.";
+    if (variants.length === 0) return "Please add at least one variant.";
 
-      const productCodes = new Set();
-      const skus = new Set();
+    const productCodes = new Set();
+    const skus = new Set();
 
-      for (let i = 0; i < variants.length; i++) {
-        const v = variants[i];
+    for (let i = 0; i < variants.length; i++) {
+      const v = variants[i];
 
-        if (!v.color) return `Variant ${i + 1}: Color is required.`;
-        if (!v.product_code.trim()) return `Variant ${i + 1}: Product code is required.`;
-        if (!v.stock_keeping_unit.trim()) return `Variant ${i + 1}: SKU is required.`;
+      if (!v.color) return `Variant ${i + 1}: Color is required.`;
+      if (!v.product_code.trim()) return `Variant ${i + 1}: Product code is required.`;
+      if (!v.stock_keeping_unit.trim()) return `Variant ${i + 1}: SKU is required.`;
 
-        if (productCodes.has(v.product_code)) {
-          return `Duplicate product code found in variant ${i + 1}`;
-        }
-        productCodes.add(v.product_code);
-
-        if (skus.has(v.stock_keeping_unit)) {
-          return `Duplicate SKU found in variant ${i + 1}`;
-        }
-        skus.add(v.stock_keeping_unit);
-
-        if (v.cost_price == null || v.cost_price <= 0) {
-          return `Variant ${i + 1}: Cost price must be positive.`;
-        }
-
-        if (v.wholesale_price == null || v.wholesale_price <= 0) {
-          return `Variant ${i + 1}: Wholesale price must be positive.`;
-        }
-
-        if (v.min_order_quantity == null || v.min_order_quantity < 0) {
-          return `Variant ${i + 1}: Min order qty cannot be negative.`;
-        }
-
-        if (!v.sizes || v.sizes.length === 0) {
-          return `Variant ${i + 1}: Please add at least one size.`;
-        }
-        for (let j = 0; j < v.sizes.length; j++) {
-          const s = v.sizes[j];
-          if (!s.size) return `Variant ${i + 1}, Size ${j + 1}: Size is required.`;
-          if (s.current_stock < 0) return `Variant ${i + 1}, Size ${j + 1}: Stock cannot be negative.`;
-        }
+      if (productCodes.has(v.product_code)) {
+        return `Duplicate product code found in variant ${i + 1}`;
       }
-      return null;
-    };
+      productCodes.add(v.product_code);
 
+      if (skus.has(v.stock_keeping_unit)) {
+        return `Duplicate SKU found in variant ${i + 1}`;
+      }
+      skus.add(v.stock_keeping_unit);
+
+      if (v.cost_price == null || v.cost_price <= 0) {
+        return `Variant ${i + 1}: Cost price must be positive.`;
+      }
+
+      if (v.wholesale_price == null || v.wholesale_price <= 0) {
+        return `Variant ${i + 1}: Wholesale price must be positive.`;
+      }
+
+      if (v.min_order_quantity == null || v.min_order_quantity < 0) {
+        return `Variant ${i + 1}: Min order qty cannot be negative.`;
+      }
+
+      if (!v.sizes || v.sizes.length === 0) {
+        return `Variant ${i + 1}: Please add at least one size.`;
+      }
+      for (let j = 0; j < v.sizes.length; j++) {
+        const s = v.sizes[j];
+        if (!s.size) return `Variant ${i + 1}, Size ${j + 1}: Size is required.`;
+        if (s.current_stock < 0) return `Variant ${i + 1}, Size ${j + 1}: Stock cannot be negative.`;
+      }
+    }
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent, isDraft: boolean) => {
     e.preventDefault();
@@ -120,7 +118,6 @@ const AddProductPage = () => {
         ...formData,
         category_id: Number(formData.category_id),
         is_draft: isDraft,
-        images,
         variants,
       };
       await addProduct(productData);
@@ -167,13 +164,13 @@ const AddProductPage = () => {
       )}
 
       <form>
-          <ProductInfoForm
-            categories={categories}
-            formData={formData}
-            onInputChange={handleInputChange}
-          />
-          <ImageUploadForm onImagesChange={setImages} />
-          <VariantForm variants={variants} onVariantsChange={setVariants} />
+        <ProductInfoForm
+          categories={categories}
+          formData={formData}
+          onInputChange={handleInputChange}
+        />
+        <VariantForm variants={variants} onVariantsChange={setVariants} />
+
         <div className="flex justify-end space-x-4 mt-6">
           <button
             type="button"
@@ -219,7 +216,7 @@ const AddProductPage = () => {
             className={`px-4 py-2 rounded text-white flex items-center justify-center ${
               isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
             }`}
-            >
+          >
             {isLoading ? (
               <>
                 <svg

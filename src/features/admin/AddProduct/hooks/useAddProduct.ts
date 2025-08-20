@@ -30,7 +30,7 @@ export const useAddProduct = () => {
             min_order_quantity: v.min_order_quantity,
             allow_customization: v.allow_customization,
             sizes: v.sizes,
-            images: [],
+            images: [], // handled in next request
           })) || [],
       };
 
@@ -45,8 +45,10 @@ export const useAddProduct = () => {
 
           const variantFormData = new FormData();
           variant.images.forEach((img) => {
-            variantFormData.append('images', img);
-            variantFormData.append('view_types', 'front'); 
+            if (img.image instanceof File) {
+              variantFormData.append('images', img.image);
+              variantFormData.append('view_types', img.view_type || 'front');
+            }
           });
 
           await api.post(
@@ -73,6 +75,8 @@ export const useAddProduct = () => {
       }
 
       throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
