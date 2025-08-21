@@ -6,6 +6,7 @@ import { useEditVariant } from "../../features/admin/AddProduct/hooks/useEditVar
 import { useEditVariantImage } from "../../features/admin/AddProduct/hooks/useEditVariantImage";
 import { ProductInfoForm } from "../../features/admin/AddProduct";
 import api from "../../lib/api";
+import Swal from "sweetalert2";
 
 import type {
   ProductFormData,
@@ -22,20 +23,14 @@ export default function EditProductPage() {
   const { editVariant, editVariantSize } = useEditVariant();
   const { editVariantImage, deleteVariantImage } = useEditVariantImage();
 
-  const [formData, setFormData] = useState<ProductFormData>({
-    category_id: 0,
-    name: "",
-    product_type: "",
-    fabric: "",
-    description: "",
-    is_draft: false,
-    variants: [],
-  });
+  const [formData, setFormData] = useState<ProductFormData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Fetch product details
   useEffect(() => {
     if (!id) return;
     const fetchProduct = async () => {
+      setLoading(true);
       try {
         const { data } = await api.get(`/products/${id}/`);
         setFormData({
@@ -49,6 +44,8 @@ export default function EditProductPage() {
         });
       } catch (err) {
         console.error("Failed to fetch product", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProduct();
@@ -60,7 +57,7 @@ export default function EditProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
+    if (!id || !formData) return;
     await editProduct(Number(id), formData);
   };
 
@@ -69,23 +66,23 @@ export default function EditProductPage() {
     field: keyof ProductVariant,
     value: any
   ) => {
+    if (!formData) return;
     setFormData((prev) => ({
-      ...prev,
-      variants: prev.variants.map((v) =>
+      ...prev!,
+      variants: prev!.variants.map((v) =>
         v.id === variantId ? { ...v, [field]: value } : v
       ),
     }));
   };
 
-  // Update size locally & persist
   const handleSizeChange = async (
     variantId: number,
     updatedSize: VariantSize
   ) => {
-    // update locally first
+    if (!formData) return;
     setFormData((prev) => ({
-      ...prev,
-      variants: prev.variants.map((v) =>
+      ...prev!,
+      variants: prev!.variants.map((v) =>
         v.id === variantId
           ? {
               ...v,
@@ -97,13 +94,12 @@ export default function EditProductPage() {
       ),
     }));
 
-    // persist to backend
     if (updatedSize.id) {
       try {
         const saved = await editVariantSize(updatedSize);
         setFormData((prev) => ({
-          ...prev,
-          variants: prev.variants.map((v) =>
+          ...prev!,
+          variants: prev!.variants.map((v) =>
             v.id === variantId
               ? {
                   ...v,
@@ -125,13 +121,27 @@ export default function EditProductPage() {
     try {
       const updated = await editVariant(variant.id, variant);
       setFormData((prev) => ({
-        ...prev,
-        variants: prev.variants.map((v) =>
+        ...prev!,
+        variants: prev!.variants.map((v) =>
           v.id === updated.id ? updated : v
         ),
       }));
+
+      // SweetAlert success notification
+      Swal.fire({
+        icon: "success",
+        title: "Variant Updated",
+        text: "The variant has been successfully updated.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (err) {
       console.error("Failed to save variant", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to update variant. Please try again.",
+      });
     }
   };
 
@@ -140,6 +150,7 @@ export default function EditProductPage() {
     imageId: number,
     file: File
   ) => {
+    if (!formData) return;
     try {
       let updatedImage;
 
@@ -167,8 +178,8 @@ export default function EditProductPage() {
       }
 
       setFormData((prev) => ({
-        ...prev,
-        variants: prev.variants.map((v) =>
+        ...prev!,
+        variants: prev!.variants.map((v) =>
           v.id === variantId
             ? {
                 ...v,
@@ -187,11 +198,12 @@ export default function EditProductPage() {
   };
 
   const handleDeleteImage = async (variantId: number, imageId: number) => {
+    if (!formData) return;
     try {
       await deleteVariantImage(imageId);
       setFormData((prev) => ({
-        ...prev,
-        variants: prev.variants.map((v) =>
+        ...prev!,
+        variants: prev!.variants.map((v) =>
           v.id === variantId
             ? { ...v, images: v.images.filter((img) => img.id !== imageId) }
             : v
@@ -201,6 +213,14 @@ export default function EditProductPage() {
       console.error("Failed to delete image", err);
     }
   };
+
+  if (loading || !formData) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
@@ -218,7 +238,7 @@ export default function EditProductPage() {
           onInputChange={(e) => {
             const { name, value, type, checked } = e.target as HTMLInputElement;
             setFormData((prev) => ({
-              ...prev,
+              ...prev!,
               [name]: type === "checkbox" ? checked : value,
             }));
           }}
@@ -332,19 +352,20 @@ export default function EditProductPage() {
                           key={s.id}
                           className="flex flex-col gap-1 border p-2 rounded"
                         >
-                          {/* Editable Size Name */}
                           <input
                             type="text"
                             value={s.size}
                             onChange={(e) =>
                               setFormData((prev) => ({
-                                ...prev,
-                                variants: prev.variants.map((v) =>
+                                ...prev!,
+                                variants: prev!.variants.map((v) =>
                                   v.id === variant.id
                                     ? {
                                         ...v,
                                         sizes: v.sizes.map((sz) =>
-                                          sz.id === s.id ? { ...sz, size: e.target.value } : sz
+                                          sz.id === s.id
+                                            ? { ...sz, size: e.target.value }
+                                            : sz
                                         ),
                                       }
                                     : v
@@ -354,20 +375,18 @@ export default function EditProductPage() {
                             onBlur={() =>
                               handleSizeChange(variant.id!, {
                                 ...s,
-                                size: s.size, 
+                                size: s.size,
                               })
                             }
                             className="border p-1 rounded text-sm"
                           />
-
-                          {/* Editable Stock */}
                           <input
                             type="number"
                             value={s.current_stock ?? 0}
                             onChange={(e) =>
                               setFormData((prev) => ({
-                                ...prev,
-                                variants: prev.variants.map((v) =>
+                                ...prev!,
+                                variants: prev!.variants.map((v) =>
                                   v.id === variant.id
                                     ? {
                                         ...v,
@@ -395,7 +414,7 @@ export default function EditProductPage() {
                   </div>
                 )}
 
-                {/* Save button */}
+                {/* Save Variant */}
                 <button
                   type="button"
                   onClick={() => saveVariant(variant)}
@@ -410,7 +429,6 @@ export default function EditProductPage() {
                   <div className="flex gap-3 mt-2 flex-wrap">
                     {variant.images.map((img, i) => {
                       if (!img) return null;
-
                       const src =
                         typeof img.image === "string"
                           ? img.image
@@ -452,8 +470,6 @@ export default function EditProductPage() {
                       );
                     })}
                   </div>
-
-                  {/* Always show upload input for new image */}
                   <div className="mt-2">
                     <input
                       type="file"

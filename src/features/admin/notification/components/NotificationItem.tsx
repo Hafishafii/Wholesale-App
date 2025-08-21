@@ -16,14 +16,12 @@ const formatTimeAgo = (dateString: string) => {
 type Props = {
   notification: AdminNotification;
   onMarkAsRead: (id: string) => void;
-  loading?: boolean; // optional if you want to disable button during async mark
+  loading?: boolean;
 };
 
 export const NotificationItem = ({ notification, onMarkAsRead, loading = false }: Props) => {
   const handleMarkAsRead = () => {
-    if (!notification.isRead && !loading) {
-      onMarkAsRead(notification.id);
-    }
+    if (!notification.isRead && !loading) onMarkAsRead(notification.id);
   };
 
   return (
@@ -34,18 +32,18 @@ export const NotificationItem = ({ notification, onMarkAsRead, loading = false }
       } hover:shadow-sm`}
     >
       <div className="flex justify-between items-start gap-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium break-words truncate max-w-[200px] sm:max-w-[300px]">
               {notification.buyer?.company || notification.buyer?.name}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
               {formatTimeAgo(notification.timestamp)}
             </span>
           </div>
-          <p className="mt-1 text-sm">{notification.message}</p>
+          <p className="mt-1 text-sm break-words">{notification.message}</p>
           {notification.items?.map((item, index) => (
-            <div className="text-xs text-muted-foreground" key={index}>
+            <div className="text-xs text-muted-foreground break-words" key={index}>
               {item.quantity}+ {item.name} {item.variant && `(${item.variant})`}
             </div>
           ))}
@@ -55,7 +53,7 @@ export const NotificationItem = ({ notification, onMarkAsRead, loading = false }
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6"
+            className="h-6 w-6 flex-shrink-0"
             onClick={(e) => {
               e.stopPropagation();
               handleMarkAsRead();

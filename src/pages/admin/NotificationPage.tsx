@@ -10,6 +10,7 @@ export const NotificationPage = () => {
   const {
     notifications,
     loading,
+    pageLoading,
     refreshing,
     error,
     unreadCount,
@@ -17,9 +18,12 @@ export const NotificationPage = () => {
     markAsRead,
     markAllAsRead,
     page,
-    totalPages,
+    next,
+    previous,
     setPage,
   } = useAdminNotifications();
+
+  const isLoading = loading || pageLoading;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto w-full">
@@ -36,20 +40,13 @@ export const NotificationPage = () => {
         </h1>
 
         <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={manualRefresh}
-            variant="outline"
-            disabled={refreshing}
-          >
+          <Button onClick={manualRefresh} variant="outline" disabled={refreshing}>
             <RefreshCwIcon
               className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
             />
             Refresh
           </Button>
-          <Button
-            onClick={markAllAsRead}
-            disabled={loading || notifications.length === 0}
-          >
+          <Button onClick={markAllAsRead} disabled={isLoading || notifications.length === 0}>
             <CheckIcon className="h-4 w-4 mr-1" />
             Mark all as read
           </Button>
@@ -60,7 +57,7 @@ export const NotificationPage = () => {
       <div className="space-y-3">
         {error && <div className="p-4 text-sm text-destructive">{error}</div>}
 
-        {loading && notifications.length === 0 ? (
+        {isLoading && notifications.length === 0 ? (
           <NotificationListSkeleton />
         ) : notifications.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
@@ -68,40 +65,38 @@ export const NotificationPage = () => {
           </div>
         ) : (
           <>
-            {notifications.map((n) => (
-              <NotificationItem
-                key={n.id}
-                notification={n}
-                onMarkAsRead={markAsRead}
-              />
-            ))}
+            {isLoading ? (
+              <NotificationListSkeleton />
+            ) : (
+              notifications.map((n) => (
+                <NotificationItem
+                  key={n.id}
+                  notification={n}
+                  onMarkAsRead={markAsRead}
+                  loading={isLoading}
+                />
+              ))
+            )}
 
-            {/* Pagination */}
-            {!loading && totalPages > 1 && (
-              <div className="flex justify-center mt-6 gap-2 flex-wrap">
+            {/* Dynamic Pagination with current page */}
+            {!loading && (next || previous) && (
+              <div className="flex justify-center mt-6 gap-2 flex-wrap items-center">
                 <Button
                   variant="outline"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
+                  onClick={() => previous && setPage(page - 1)}
+                  disabled={!previous || pageLoading}
                 >
                   Prev
                 </Button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <Button
-                    key={p}
-                    variant={p === page ? "default" : "outline"}
-                    onClick={() => setPage(p)}
-                    disabled={loading}
-                  >
-                    {p}
-                  </Button>
-                ))}
+                <span className="px-3 py-1 rounded bg-gray-100 text-gray-700 font-medium">
+                  {pageLoading ? "Loading..." : `Page ${page}`}
+                </span>
 
                 <Button
                   variant="outline"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === totalPages}
+                  onClick={() => next && setPage(page + 1)}
+                  disabled={!next || pageLoading}
                 >
                   Next
                 </Button>

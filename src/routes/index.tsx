@@ -107,7 +107,7 @@ const AppRoutes = () => {
 
       <Route path="/admin/*" element={<AdminOnlyRoute />}>
         <Route index element={<AdminHome />} />  {/*Aravind*/}
-        <Route path="notification" element={<NotificationPage />} /> {/*Hafis*/}
+        <Route path="notifications" element={<NotificationPage />} /> {/*Hafis*/}
         <Route path="categories" element={<CategoryPage />} />
         <Route path="products" element={<ProductListPage />} /> {/*Hafis*/}
         <Route path="add-product" element={<AddProductPage />} /> {/*Hafis*/}

@@ -5,60 +5,49 @@ import api from "../../../../lib/api";
 export const useAdminNotifications = () => {
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false); 
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
+
+  const [next, setNext] = useState<string | null>(null);
+  const [previous, setPrevious] = useState<string | null>(null);
 
   const fetchNotifications = useCallback(
     async (pageNumber: number = 1, isManual = false) => {
       try {
-        if (isManual) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
+        if (isManual) setRefreshing(true);
+        else if (pageNumber !== page) setPageLoading(true);
+        else setLoading(true);
 
-        const res = await api.get(
-          `/notifications/?page=${pageNumber}&page_size=${pageSize}`
-        );
+        const res = await api.get(`/notifications/?page=${pageNumber}&page_size=${pageSize}`);
 
-        const notificationsArray = Array.isArray(res.data.results)
-          ? res.data.results
-          : [];
-
+        const notificationsArray = Array.isArray(res.data.results) ? res.data.results : [];
         const validTypes = ["alert", "purchase", "system"] as const;
 
-        const sanitized: AdminNotification[] = notificationsArray.map(
-          (n: any) => ({
-            id: n.id.toString(),
-            message: n.message,
-            timestamp:
-              n.created_at || n.timestamp || new Date().toISOString(),
-            isRead: n.is_read ?? false,
-            type: validTypes.includes(n.type) ? n.type : "system",
-            buyer: n.buyer
-              ? {
-                  name: n.buyer.name,
-                  company: n.buyer.company,
-                }
-              : undefined,
-            items: n.items
-              ? n.items.map((item: any) => ({
-                  name: item.name,
-                  quantity: item.quantity,
-                  variant: item.variant,
-                }))
-              : undefined,
-          })
-        );
+        const sanitized: AdminNotification[] = notificationsArray.map((n: any) => ({
+          id: n.id.toString(),
+          message: n.message,
+          timestamp: n.created_at || n.timestamp || new Date().toISOString(),
+          isRead: n.is_read ?? false,
+          type: validTypes.includes(n.type) ? n.type : "system",
+          buyer: n.buyer ? { name: n.buyer.name, company: n.buyer.company } : undefined,
+          items: n.items
+            ? n.items.map((item: any) => ({
+                name: item.name,
+                quantity: item.quantity,
+                variant: item.variant,
+              }))
+            : undefined,
+        }));
 
         setNotifications(sanitized);
-        setTotalCount(res.data.count || 0);
         setUnreadCount(sanitized.filter((n) => !n.isRead).length);
+        setNext(res.data.next);
+        setPrevious(res.data.previous);
         setError(null);
         setPage(pageNumber);
       } catch (err) {
@@ -69,14 +58,13 @@ export const useAdminNotifications = () => {
       } finally {
         setLoading(false);
         setRefreshing(false);
+        setPageLoading(false);
       }
     },
-    [pageSize]
+    [pageSize, page]
   );
 
-  const manualRefresh = useCallback(() => {
-    fetchNotifications(page, true);
-  }, [fetchNotifications, page]);
+  const manualRefresh = useCallback(() => fetchNotifications(page, true), [fetchNotifications, page]);
 
   const markAsRead = useCallback(async (id: string) => {
     try {
@@ -100,28 +88,19 @@ export const useAdminNotifications = () => {
     }
   }, []);
 
-  // Fetch on mount + background refresh
+  // Fetch on mount + interval refresh
   useEffect(() => {
     fetchNotifications(page);
-
-    const interval = setInterval(() => {
-      fetchNotifications(page); // stay on same page
-    }, 30000);
-
+    const interval = setInterval(() => fetchNotifications(page), 30000);
     return () => clearInterval(interval);
   }, [fetchNotifications, page]);
 
-  const totalPages = Math.ceil(totalCount / pageSize);
-
-  // ✅ fixed setPage
-  const changePage = (newPage: number) => {
-    setPage(newPage);
-    fetchNotifications(newPage);
-  };
+  const changePage = (newPage: number) => fetchNotifications(newPage);
 
   return {
     notifications,
     loading,
+    pageLoading,
     refreshing,
     error,
     unreadCount,
@@ -129,7 +108,8 @@ export const useAdminNotifications = () => {
     markAsRead,
     markAllAsRead,
     page,
-    totalPages,
+    next,
+    previous,
     setPage: changePage,
   };
 };
