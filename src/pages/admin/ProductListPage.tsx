@@ -57,7 +57,7 @@ const ProductListPage = () => {
     if (!next && !previous && page === 1) return null;
 
     return (
-      <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+      <div className="flex flex-wrap justify-center items-center gap-2 mt-6">
         <Button
           variant="outline"
           disabled={!previous || pageLoading}
@@ -82,49 +82,102 @@ const ProductListPage = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 bg-white min-h-screen">
+      <div className="p-4 sm:p-6 md:p-8 bg-white min-h-screen">
         {/* Search & Filters */}
         <div className="mb-6 flex flex-col gap-4">
           <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
-            <input type="text" placeholder="Search Products..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full md:w-1/2 border rounded-md px-4 py-2" />
-            <Button onClick={() => navigate("/admin/add-product")} className="whitespace-nowrap">+ Add Product</Button>
+            <input
+              type="text"
+              placeholder="Search Products..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full md:w-1/2 border rounded-md px-4 py-2"
+            />
+            <Button
+              onClick={() => navigate("/admin/add-product")}
+              className="whitespace-nowrap"
+            >
+              + Add Product
+            </Button>
           </div>
-          <div className="flex flex-wrap gap-4 items-center">
-            <select value={filters.category ?? ""} onChange={(e) => handleFilterChange("category", e.target.value)} className="border rounded-md px-3 py-2">
+
+          <div className="flex flex-wrap gap-3 sm:gap-4 items-center">
+            <select
+              value={filters.category ?? ""}
+              onChange={(e) => handleFilterChange("category", e.target.value)}
+              className="border rounded-md px-3 py-2 min-w-[120px]"
+            >
               <option value="">All Categories</option>
-              {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
             </select>
-            <select value={filters.size ?? ""} onChange={(e) => handleFilterChange("size", e.target.value)} className="border rounded-md px-3 py-2">
+
+            <select
+              value={filters.size ?? ""}
+              onChange={(e) => handleFilterChange("size", e.target.value)}
+              className="border rounded-md px-3 py-2 min-w-[120px]"
+            >
               <option value="">All Sizes</option>
               <option value="freesize">Free Size</option>
               <option value="small">Small</option>
               <option value="medium">Medium</option>
               <option value="large">Large</option>
             </select>
-            <input type="text" placeholder="Fabric (e.g. cotton oxford)" value={filters.fabric ?? ""} onChange={(e) => handleFilterChange("fabric", e.target.value)} className="border rounded-md px-3 py-2" />
-            <select value={filters.availability ?? ""} onChange={(e) => handleFilterChange("availability", e.target.value)} className="border rounded-md px-3 py-2">
+
+            <input
+              type="text"
+              placeholder="Fabric (e.g. cotton oxford)"
+              value={filters.fabric ?? ""}
+              onChange={(e) => handleFilterChange("fabric", e.target.value)}
+              className="border rounded-md px-3 py-2 min-w-[150px]"
+            />
+
+            <select
+              value={filters.availability ?? ""}
+              onChange={(e) => handleFilterChange("availability", e.target.value)}
+              className="border rounded-md px-3 py-2 min-w-[120px]"
+            >
               <option value="">All Availability</option>
               <option value="in_stock">In Stock</option>
               <option value="out_of_stock">Out of Stock</option>
             </select>
-            <select value={filters.allow_customization?.toString() ?? ""} onChange={(e) => handleFilterChange("allow_customization", e.target.value === "true")} className="border rounded-md px-3 py-2">
+
+            <select
+              value={filters.allow_customization?.toString() ?? ""}
+              onChange={(e) => handleFilterChange("allow_customization", e.target.value === "true")}
+              className="border rounded-md px-3 py-2 min-w-[150px]"
+            >
               <option value="">Customization (All)</option>
               <option value="true">Allow Customization</option>
               <option value="false">No Customization</option>
             </select>
-            <Button variant="outline" onClick={handleClearFilters} className="whitespace-nowrap">Clear Filters</Button>
+
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              className="whitespace-nowrap"
+            >
+              Clear Filters
+            </Button>
           </div>
         </div>
 
         {/* Products */}
         {pageLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {Array.from({ length: 12 }).map((_, i) => <SkeletonBox key={i} className="h-64" />)}
+            {Array.from({ length: 12 }).map((_, i) => (
+              <SkeletonBox key={i} className="h-64" />
+            ))}
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-10">
             <p className="text-gray-500">No products found</p>
-            <Button onClick={() => navigate("/admin/add-product")} className="mt-4">Add Your First Product</Button>
+            <Button onClick={() => navigate("/admin/add-product")} className="mt-4">
+              Add Your First Product
+            </Button>
           </div>
         ) : (
           <>

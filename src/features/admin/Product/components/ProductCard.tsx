@@ -46,10 +46,11 @@ const ProductCard = ({ product }: Props) => {
       <div className="aspect-square bg-gray-100 relative group">
         <button
           onClick={() => navigate(`/admin/products/${product.id}/edit`)}
-          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition opacity-0 group-hover:opacity-100"
-          title="Edit Product"
-          aria-label="Edit product"
-        >
+            className="absolute top-2 right-2 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition
+            opacity-100 group-hover:opacity-100 sm:opacity-0"
+            title="Edit Product"
+            aria-label="Edit product"
+          >
           <Pencil className="w-4 h-4 text-blue-600" />
         </button>
 
